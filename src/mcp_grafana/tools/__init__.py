@@ -1,6 +1,6 @@
 from mcp.server import FastMCP
 
-from . import datasources, incident, prometheus, search
+from . import datasources, incident, prometheus, search, loki
 from ..settings import grafana_settings
 
 
@@ -16,3 +16,5 @@ def add_tools(mcp: FastMCP):
         incident.add_tools(mcp)
     if grafana_settings.tools.prometheus.enabled:
         prometheus.add_tools(mcp)
+    if grafana_settings.tools.loki.enabled:
+        loki.add_tools(mcp)

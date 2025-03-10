@@ -216,5 +216,68 @@ class GrafanaClient:
             params,
         )
 
+    async def loki_query_range(
+        self,
+        datasource_uid: str,
+        query: str,
+        start: datetime,
+        end: datetime,
+        step: str = "1s",
+        limit: int | None = None,
+        direction: str | None = None,
+    ) -> bytes:
+        """
+        Query Loki for logs or metrics over a range of time.
+        
+        Args:
+            datasource_uid: The UID of the Loki datasource
+            query: The LogQL query
+            start: Start time
+            end: End time
+            step: Query resolution step width (e.g. "1s", "1m")
+            limit: Maximum number of entries to return
+            direction: Direction of query (BACKWARD or FORWARD)
+        """
+        params = {
+            "query": query,
+            "start": str(int(start.timestamp() * 1e9)),  # Loki uses nanoseconds
+            "end": str(int(end.timestamp() * 1e9)),
+            "step": step,
+        }
+        
+        if limit is not None:
+            params["limit"] = str(limit)
+        if direction is not None:
+            params["direction"] = direction
+            
+        return await self.get(
+            f"/api/datasources/proxy/uid/{datasource_uid}/loki/api/v1/query_range",
+            params,
+        )
+
+    async def loki_query(
+        self,
+        datasource_uid: str,
+        query: str,
+        time: datetime | None = None,
+    ) -> bytes:
+        """
+        Query Loki for instant metrics at a single point in time.
+        
+        Args:
+            datasource_uid: The UID of the Loki datasource
+            query: The LogQL query
+            time: Query evaluation time, defaults to now if not specified
+        """
+        params = {"query": query}
+        
+        if time is not None:
+            params["time"] = str(int(time.timestamp() * 1e9))  # Loki uses nanoseconds
+            
+        return await self.get(
+            f"/api/datasources/proxy/uid/{datasource_uid}/loki/api/v1/query",
+            params,
+        )
+
 
 grafana_client = GrafanaClient(grafana_settings.url, api_key=grafana_settings.api_key)
